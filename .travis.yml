@@ -9,3 +9,14 @@ script:
 
 if:
   tag IS blank
+
+
+
+deploy:
+  provider: releases
+  api_key: 
+    secure: "OafX+FJmzImiema7idx8/nDytS+fOAPLefLMT8UZVfGKU/MnMtWNsmLmcvylsetD41u7rQduQ75yqo7J9GG18P467MNGORjuKBilK84Y3wtm4V5wnccHKsf85s2Dc+osVBIOZthoUPaz/3udD/NQAoPyUm2yR0rCDB33hvUEh82V4o/l5PyIibQjm0g7NHCtN6EBezRiSjr9oUdftmTvaFnqhGEIhzU5pGdGd4IE7/CAlZCHAO2SIJGUsr9sDEAijVpgVGgHOop2TIriYt0fZslfnygPWQn/GMdRQfj+R6HynCkiykVN/y4tx5xPjJq1p/HUUvFeBDL7AmFUbWBIJxM4nEOGs84naYy6rbos1cfE78vVK0hrGqtN1gNd5fQyIqu0yUbbPpukodb8K6JP8Z937k5o9pgWEJibIi3MdnKeSIKV9CT3U3084E7q2wcNPEhKM7+FtXilq5GtBFrlCqdCswGMKI44ACwuaZVHzfGuWCUVyObpiGU2wiUJe5h/H+PvbwuUcFuAE+WvaVyNQ6YamH6Ogh3JnQTVBeG8YmzdGkD0QCbtg5L9DfWILSG/hvitisl0RxlIYrAJUcRzNQyswdfuQKZuUBNqs5acav1igeOeKUYu40UkW2uWvOVCyWbOhjJvbAS/ZRNqiTMLF7JyrtZTQ2GZF3dtKCsJokg="
+  file: ../
+  skip_cleanup: true
+  on:
+    tags: true
