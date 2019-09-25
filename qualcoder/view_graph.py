@@ -174,9 +174,6 @@ def plot_with_pygraphviz(cats,codes,codelinks,text_conns=None,topnode=None,add_h
         
 
     graph.layout(prog=prog) # layout with default (neato)
-    path = os.path.abspath('simple.pdf')
-    print('saved to: %s'%path)
-    graph.draw(path) # draw png
     return graph
 
 
@@ -248,8 +245,11 @@ class ViewGraph(QtWidgets.QWidget):
         self.groupBox_2.setTitle("")
         self.groupBox_2.setObjectName("groupBox_2")
         self.pushButton_view = QtWidgets.QPushButton('View',self.groupBox_2)
-        self.pushButton_view.setGeometry(QtCore.QRect(0, 0, 161, 27))
+        self.pushButton_view.setGeometry(QtCore.QRect(0, 0, 161, 20))
         self.pushButton_view.setObjectName("pushButton_view")
+        self.pushButton_save = QtWidgets.QPushButton('Save',self.groupBox_2)
+        self.pushButton_save.setGeometry(QtCore.QRect(0, 20, 161, 20))
+        self.pushButton_save.setObjectName("pushButton_save")
         self.comboBox = QtWidgets.QComboBox(self.groupBox_2)
         self.comboBox.setGeometry(QtCore.QRect(660, 0, 421, 30))
         self.comboBox.setObjectName("comboBox")
@@ -271,10 +271,12 @@ class ViewGraph(QtWidgets.QWidget):
 
         self.layout().addWidget(self.groupBox_2)
         self.pushButton_view.pressed.connect(self.do_graph)
+        self.pushButton_save.pressed.connect(self.save_graph)
         self.comboBox.addItems(combobox_list)
         self.resize(1098, 753)
         self.setAttribute(Qt.WA_QuitOnClose, False )
         # self.graphicsView.setGeometry(QtCore.QRect(10, 40, 601, 411))
+        self.graph = None
 
     def do_graph(self):
         name = self.comboBox.currentText()
@@ -290,7 +292,7 @@ class ViewGraph(QtWidgets.QWidget):
         text_conns = None
         if self.checkBox_with_text_conns.isChecked():
             text_conns = self.app.get_texts_per_codes(),self.app.get_texts_per_text()
-        graph = plot_with_pygraphviz(
+        self.graph = graph = plot_with_pygraphviz(
             self.app.categories,
             self.app.codes,
             namedlinks,
@@ -298,6 +300,14 @@ class ViewGraph(QtWidgets.QWidget):
             add_hierachy=self.checkBox_hierachy.isChecked(),
             topnode=topnode,prog=prog)
         self.graphicsView.drawGraph(graph)
+
+    def save_graph(self):
+        path = QtWidgets.QFileDialog.getSaveFileName(self,
+            _("Enter save path"), self.app.settings['directory'])[0]
+        if self.graph is not None:
+            # path = os.path.abspath('simple.pdf')
+            # print('saved to: %s'%path)
+            self.graph.draw(path) # draw png
 
 
 class GVEdgeGraphicsItem(QtWidgets.QGraphicsPathItem):

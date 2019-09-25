@@ -28,6 +28,7 @@ https://qualcoder.wordpress.com/
 '''
 
 import re
+import csv
 import datetime
 import gettext
 import logging
@@ -458,6 +459,25 @@ class App(object):
     def sort_by_len(self,data):
         return sorted(data,key=lambda x:len(data[x]))
 
+    def get_text_frequency_in_codes(self,text_per_code):
+        res = {}
+        for code,texts in text_per_code.items():
+            counters = defaultdict(lambda :0)
+            for text in texts:
+                counters[text['seltext'].lower()] += 1
+            res[code] = counters
+        return res
+
+    def export_text_frequency_in_codes(self,freqs,path):
+        with open(path, 'w') as csvFile:
+            writer = csv.writer(csvFile, delimiter=',',
+                quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow(('Code','Text','Frequency'))
+            for code,counters in freqs.items():
+                for text,val in counters.items():
+                    writer.writerow((code,text,val))
+
+
 
 class MainWindow(QtWidgets.QMainWindow):
     """ Main GUI window.
@@ -520,6 +540,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.actionCoding_reports.triggered.connect(self.report_coding)
         self.ui.actionCoding_comparison.triggered.connect(self.report_coding_comparison)
         self.ui.actionCode_frequencies.triggered.connect(self.report_code_frequencies)
+        self.ui.actionTextinCode_frequencies.triggered.connect(self.report_text_in_code_frequencies)
         #TODO self.ui.actionText_mining.triggered.connect(self.text_mining)
         self.ui.actionSQL_statements.triggered.connect(self.report_sql)
 
@@ -643,6 +664,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dialogList.append(ui)
         ui.show()
         self.clean_dialog_refs()
+
+    def report_text_in_code_frequencies(self):
+        """ Show code frequencies overall and by coder. """
+
+        path = QtWidgets.QFileDialog.getSaveFileName(self,
+            _("Enter save path"), self.settings['directory'])[0]
+        texts_per = self.app.get_texts_per_codes()
+        freqs = self.app.get_text_frequency_in_codes(texts_per)
+        self.app.export_text_frequency_in_codes(freqs,path)
 
     def report_coding(self):
         """ Report on coding and categories. """
