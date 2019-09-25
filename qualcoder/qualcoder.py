@@ -37,6 +37,7 @@ import sys
 import sqlite3
 import traceback
 import configparser
+from collections import defaultdict
 
 import click
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -415,18 +416,47 @@ class App(object):
         })
         return res
 
-
-    def get_code_texts(self,text):
+    def get_code_texts(self,text=None):
         cur = self.conn.cursor()
-        codingsql = "select cid, fid, seltext, pos0, pos1, owner, date, memo from code_text where seltext like ?"
+        if text is not None:
+            codingsql = "select cid, fid, seltext, pos0, pos1, owner, date, memo from code_text where seltext like ?"
+            args = [text]
+        else:
+            codingsql = "select cid, fid, seltext, pos0, pos1, owner, date, memo from code_text"
+            args = []
         cur.execute(
             codingsql, 
-            [text],
+            args,
         )
         keys = 'cid','fid','seltext','pos0','pos1','owner','date','memo'
         for res in cur.fetchall():
             yield dict(zip(keys,res))
 
+    def get_texts_per_codes(self,**kwargs):
+        res = defaultdict(list)
+        for text in self.get_code_texts(**kwargs): 
+            res[text['cid']].append(text)
+        return res
+
+    def get_texts_per_text(self,**kwargs):
+        res = defaultdict(list)
+        for text in self.get_code_texts(**kwargs): 
+            res[text['seltext']].append(text)
+        return res
+
+    def get_unique_codes(self,text_per_text):
+        res = {}
+        for text,vals in text_per_text.items():
+            res[text] = []
+            codes = set()
+            for x in vals:
+                if x['cid'] not in codes:
+                    codes.add(x['cid'])
+                    res[text].append(x)
+        return res 
+
+    def sort_by_len(self,data):
+        return sorted(data,key=lambda x:len(data[x]))
 
 
 class MainWindow(QtWidgets.QMainWindow):

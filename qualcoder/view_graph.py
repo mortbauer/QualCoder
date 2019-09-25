@@ -114,7 +114,7 @@ def get_first_with_attr(cats,**attrs):
             return x
 
 
-def plot_with_pygraphviz(cats,codes,codelinks,topnode=None,prog='neato',rankdir='LR'):
+def plot_with_pygraphviz(cats,codes,codelinks,text_conns=None,topnode=None,add_hierachy=True,prog='neato',rankdir='LR'):
     tocatid = lambda x:'catid:%s'%x['catid']
     tocid = lambda x:'cid:%s'%x['cid']
 
@@ -147,13 +147,32 @@ def plot_with_pygraphviz(cats,codes,codelinks,topnode=None,prog='neato',rankdir=
         if a not in addednodes:
             fromnode = codesper[link['from_id']]
             graph.add_node(a,label=fromnode['name'],type='code',fillcolor=fromnode['color'])
+            addednodes.add(a)
         if b not in addednodes:
             tonode = codesper[link['to_id']]
             graph.add_node(b,label=tonode['name'],type='code',fillcolor=tonode['color'])
+            addednodes.add(b)
         graph.add_edge(a,b,label=link['name'],fontcolor=link['color'],color=link['color'])
 
-    mycats = list(visit_cats_from_supercats(cats,node=topnode,func=draw_connection_cats))
-    mycodes = list(visit_codes_from_cats(mycats,codes,draw_connection_codes))
+    draw = draw_connection_cats if add_hierachy else None
+    mycats = list(visit_cats_from_supercats(cats,node=topnode,func=draw))
+    draw = draw_connection_codes if add_hierachy else None
+    mycodes = list(visit_codes_from_cats(mycats,codes,draw))
+    if text_conns is not None:
+        text_per_code, text_per_text = text_conns
+        for code in mycodes:
+            this = tocid(code)
+            for ttext in text_per_code.get(code['cid'],[]):
+                for text in text_per_text[ttext['seltext']]:
+                    other = tocid(text)
+                    if other != this:
+                        if other not in addednodes:
+                            node = codesper[text['cid']]
+                            graph.add_node(other,label=node['name'],type='code',fillcolor=node['color'])
+                            addednodes.add(other)
+                        graph.add_edge(this,other)#label=text['seltext'])#,fontcolor=text['color'],color=text['color'])
+        
+
     graph.layout(prog=prog) # layout with default (neato)
     path = os.path.abspath('simple.pdf')
     print('saved to: %s'%path)
@@ -241,6 +260,15 @@ class ViewGraph(QtWidgets.QWidget):
         self.checkBox_named_links.setGeometry(QtCore.QRect(290, 0, 191, 22))
         self.checkBox_named_links.setChecked(True)
         self.checkBox_named_links.setObjectName("checkBox_named_links")
+        self.checkBox_with_text_conns = QtWidgets.QCheckBox('text-links',self.groupBox_2)
+        self.checkBox_with_text_conns.setGeometry(QtCore.QRect(490, 0, 191, 22))
+        # self.checkBox_with_text_conns.setChecked(True)
+        self.checkBox_with_text_conns.setObjectName("checkBox_text_links")
+        self.checkBox_hierachy = QtWidgets.QCheckBox('hierachy',self.groupBox_2)
+        self.checkBox_hierachy.setGeometry(QtCore.QRect(170, 20, 191, 22))
+        self.checkBox_hierachy.setChecked(True)
+        self.checkBox_hierachy.setObjectName("checkBox_hierachy")
+
         self.layout().addWidget(self.groupBox_2)
         self.pushButton_view.pressed.connect(self.do_graph)
         self.comboBox.addItems(combobox_list)
@@ -259,10 +287,15 @@ class ViewGraph(QtWidgets.QWidget):
             namedlinks = self.app.get_code_name_links()
         else:
             namedlinks = []
+        text_conns = None
+        if self.checkBox_with_text_conns.isChecked():
+            text_conns = self.app.get_texts_per_codes(),self.app.get_texts_per_text()
         graph = plot_with_pygraphviz(
             self.app.categories,
             self.app.codes,
             namedlinks,
+            text_conns=text_conns,
+            add_hierachy=self.checkBox_hierachy.isChecked(),
             topnode=topnode,prog=prog)
         self.graphicsView.drawGraph(graph)
 
