@@ -74,6 +74,7 @@ def visit_cats_from_supercats(cats,node=None,func=None):
         func = lambda a,b:(a,b)
     per_supercat = calc_supercats(cats)
     if node is not None:
+        yield node
         yield from recurse_supercats(node,per_supercat,func=func)
     else:
         per_cats = {x['catid']:x for x in cats}
