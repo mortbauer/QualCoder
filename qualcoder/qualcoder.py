@@ -459,25 +459,35 @@ class App(object):
     def sort_by_len(self,data):
         return sorted(data,key=lambda x:len(data[x]))
 
-    def get_text_frequency_in_codes(self,text_per_code):
+    def get_text_frequency_in_codes(self,text_per_code,pattern=None,to_lower=True):
+        if pattern is not None:
+            pattern = re.compile(pattern)
         res = {}
         for code,texts in text_per_code.items():
             counters = defaultdict(lambda :0)
             for text in texts:
-                counters[text['seltext'].lower()] += 1
+                codetext = text['seltext']
+                if to_lower:
+                    codetext = codetext.lower()
+                if pattern is not None:
+                    for match in pattern.findall(codetext):
+                        counters[match] += 1
+                counters[codetext] += 1
             res[code] = counters
         return res
 
     def export_text_frequency_in_codes(self,freqs,path):
+        codes = {x['cid']:x for x in self.codes}
         with open(path, 'w') as csvFile:
             writer = csv.writer(csvFile, delimiter=',',
                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(('Code','Text','Frequency'))
-            for code,counters in freqs.items():
+            for cid,counters in freqs.items():
+                code = codes[cid]['name']
                 for text,val in counters.items():
                     writer.writerow((code,text,val))
 
-
+ 
 
 class MainWindow(QtWidgets.QMainWindow):
     """ Main GUI window.
@@ -1162,4 +1172,18 @@ def graph(project_path,cat_id,gui,**kwargs):
         win.view.drawGraph(graph)
         win.show()
         sys.exit(app.exec_())
+
+@cli.command()
+@click.argument('project-path')
+@click.argument('to-path')
+@click.option('--single-words',is_flag=True)
+@click.option('--pattern')
+def export_text_frequency_in_codes(project_path,to_path,single_words,pattern):
+    if single_words:
+        pattern = r'\b\w+\b'
+    app = App()
+    app.create_connection(project_path)
+    texts_per = app.get_texts_per_codes()
+    freqs = app.get_text_frequency_in_codes(texts_per,pattern=pattern)
+    app.export_text_frequency_in_codes(freqs,to_path)
 
