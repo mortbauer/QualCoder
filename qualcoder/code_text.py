@@ -664,21 +664,21 @@ class DialogCodeText(CodedMediaMixin,QtWidgets.QWidget):
                 found = i
         if found == -1:
             return
-        code_ = self.codes[found]
+        code = self.codes[found]
         ui = DialogConfirmDelete(_("Code: ") + selected.text(0))
         ok = ui.exec_()
         if not ok:
             return
         cur = self.app.conn.cursor()
-        cur.execute("delete from code_name where cid=?", [code_['cid'], ])
-        cur.execute("delete from code_text where cid=?", [code_['cid'], ])
+        cur.execute("delete from code_name where cid=?", [code['cid'], ])
+        cur.execute("delete from code_text where cid=?", [code['cid'], ])
         cur.execute("delete from code_name_links where from_id=?", [code['cid'], ])
         cur.execute("delete from code_name_links where to_id=?", [code['cid'], ])
         self.app.conn.commit()
         selected = None
         self.get_codes_categories()
         self.fill_tree()
-        self.parent_textEdit.append(_("Code deleted: ") + code_['name'] + "\n")
+        self.parent_textEdit.append(_("Code deleted: ") + code['name'] + "\n")
         # update filter for tooltip
         self.eventFilterTT.setCodes(self.code_text, self.codes)
 
