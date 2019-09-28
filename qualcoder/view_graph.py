@@ -125,7 +125,7 @@ def plot_with_pygraphviz(cats,codes,codelinks,text_conns=None,topnode=None,add_h
         graph.add_node(tocatid(topnode),label=topnode['name'])
     
     def draw_connection_cats(top,b):
-        graph.add_node(tocatid(b),label=b['name'],type='cat')
+        graph.add_node(tocatid(b),label=b['name'])
         if top is not None:
             graph.add_edge(tocatid(top),tocatid(b),label='')
 
@@ -136,7 +136,7 @@ def plot_with_pygraphviz(cats,codes,codelinks,text_conns=None,topnode=None,add_h
             attrs['style'] = 'filled'
         cid = tocid(b)
         addednodes.add(cid)
-        graph.add_node(cid,label=b['name'],type='code',**attrs)
+        graph.add_node(cid,label=b['name'],**attrs)
         if top is not None:
             graph.add_edge(tocatid(top),tocid(b),label='')
 
@@ -146,11 +146,11 @@ def plot_with_pygraphviz(cats,codes,codelinks,text_conns=None,topnode=None,add_h
         b = 'cid:%s'%link['to_id']
         if a not in addednodes:
             fromnode = codesper[link['from_id']]
-            graph.add_node(a,label=fromnode['name'],type='code',fillcolor=fromnode['color'])
+            graph.add_node(a,label=fromnode['name'],fillcolor=fromnode['color'],style='filled')
             addednodes.add(a)
         if b not in addednodes:
             tonode = codesper[link['to_id']]
-            graph.add_node(b,label=tonode['name'],type='code',fillcolor=tonode['color'])
+            graph.add_node(b,label=tonode['name'],fillcolor=tonode['color'],style='filled')
             addednodes.add(b)
         graph.add_edge(a,b,label=link['name'],fontcolor=link['color'],color=link['color'])
 
@@ -168,7 +168,7 @@ def plot_with_pygraphviz(cats,codes,codelinks,text_conns=None,topnode=None,add_h
                     if other != this:
                         if other not in addednodes:
                             node = codesper[text['cid']]
-                            graph.add_node(other,label=node['name'],type='code',fillcolor=node['color'])
+                            graph.add_node(other,label=node['name'],fillcolor=node['color'],style='filled')
                             addednodes.add(other)
                         graph.add_edge(this,other)#label=text['seltext'])#,fontcolor=text['color'],color=text['color'])
         
